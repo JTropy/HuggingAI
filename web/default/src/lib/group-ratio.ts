@@ -16,26 +16,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+export function isOwnerGroup(group?: string | null) {
+  return group?.trim().toLowerCase() === 'owner'
+}
 
-export const INTERFACE_LANGUAGE_OPTIONS = [
-  { code: 'zh', label: '简体中文' },
-  { code: 'en', label: 'English' },
-  { code: 'fr', label: 'Français' },
-  { code: 'ru', label: 'Русский' },
-  { code: 'ja', label: '日本語' },
-  { code: 'vi', label: 'Tiếng Việt' },
-] as const
-
-export type InterfaceLanguageCode =
-  (typeof INTERFACE_LANGUAGE_OPTIONS)[number]['code']
-
-export function normalizeInterfaceLanguage(value?: string | null): string {
-  if (!value) return 'zh'
-
-  const normalized = value.trim().replace(/_/g, '-').toLowerCase()
-  if (normalized.startsWith('zh')) return 'zh'
-
-  return INTERFACE_LANGUAGE_OPTIONS.some((lang) => lang.code === normalized)
-    ? normalized
-    : 'zh'
+export function normalizeGroupRatio<T extends number | string | null | undefined>(
+  group: string | null | undefined,
+  ratio: T
+): T | number {
+  if (typeof ratio !== 'number') return ratio
+  if (ratio === 0 && !isOwnerGroup(group)) return 1
+  return ratio
 }

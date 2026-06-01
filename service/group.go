@@ -3,6 +3,7 @@ package service
 import (
 	"strings"
 
+	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 )
@@ -39,6 +40,24 @@ func GetUserUsableGroups(userGroup string) map[string]string {
 func GroupInUserUsableGroups(userGroup, groupName string) bool {
 	_, ok := GetUserUsableGroups(userGroup)[groupName]
 	return ok
+}
+
+func CanUseTokenGroup(isAdmin bool, userGroup, groupName string) bool {
+	groupName = strings.TrimSpace(groupName)
+	if groupName == "" {
+		return true
+	}
+	if groupName != "auto" && !ratio_setting.ContainsGroupRatio(groupName) {
+		return false
+	}
+	if ratio_setting.IsOwnerGroup(groupName) {
+		return isAdmin
+	}
+	return GroupInUserUsableGroups(userGroup, groupName)
+}
+
+func CanSetTokenGroup(role int, userGroup, groupName string) bool {
+	return CanUseTokenGroup(role >= common.RoleAdminUser, userGroup, groupName)
 }
 
 // GetUserAutoGroup 根据用户分组获取自动分组设置

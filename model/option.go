@@ -70,7 +70,7 @@ func InitOptionMap() {
 	common.OptionMap["Footer"] = common.Footer
 	common.OptionMap["SystemName"] = common.SystemName
 	common.OptionMap["Logo"] = common.Logo
-	common.OptionMap["ServerAddress"] = ""
+	common.OptionMap["ServerAddress"] = system_setting.ServerAddress
 	common.OptionMap["WorkerUrl"] = system_setting.WorkerUrl
 	common.OptionMap["WorkerValidKey"] = system_setting.WorkerValidKey
 	common.OptionMap["WorkerAllowHttpImageRequestEnabled"] = strconv.FormatBool(system_setting.WorkerAllowHttpImageRequestEnabled)
@@ -521,8 +521,22 @@ func updateOptionMap(key string, value string) (err error) {
 	case "ModelRatio":
 		err = ratio_setting.UpdateModelRatioByJSONString(value)
 	case "GroupRatio":
+		value, err = ratio_setting.NormalizeGroupRatioJSONString(value)
+		if err == nil {
+			common.OptionMap[key] = value
+		}
+		if err != nil {
+			break
+		}
 		err = ratio_setting.UpdateGroupRatioByJSONString(value)
 	case "GroupGroupRatio":
+		value, err = ratio_setting.NormalizeGroupGroupRatioJSONString(value)
+		if err == nil {
+			common.OptionMap[key] = value
+		}
+		if err != nil {
+			break
+		}
 		err = ratio_setting.UpdateGroupGroupRatioByJSONString(value)
 	case "UserUsableGroups":
 		err = setting.UpdateUserUsableGroupsByJSONString(value)

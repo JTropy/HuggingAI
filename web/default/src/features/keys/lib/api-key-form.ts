@@ -30,6 +30,7 @@ export function getApiKeyFormSchema(t: TFunction) {
   return z
     .object({
       name: z.string().min(1, t('Please enter a name')),
+      key: z.string().optional(),
       remain_quota_dollars: z.number().optional(),
       expired_time: z.date().optional(),
       unlimited_quota: z.boolean(),
@@ -40,6 +41,30 @@ export function getApiKeyFormSchema(t: TFunction) {
       tokenCount: z.number().min(1).optional(),
     })
     .superRefine((data, ctx) => {
+      const customKey = data.key?.trim() || ''
+      if (customKey !== '') {
+        const normalizedKey = customKey.startsWith('sk-')
+          ? customKey.slice(3)
+          : customKey
+        if (!/^[A-Za-z0-9_]{1,128}$/.test(normalizedKey)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['key'],
+            message: t(
+              'Use 1-128 letters, numbers, or underscores. The sk- prefix is optional'
+            ),
+          })
+        }
+      }
+
+      if (customKey !== '' && (data.tokenCount || 1) > 1) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['tokenCount'],
+          message: t('Custom API key can only be used when creating one key'),
+        })
+      }
+
       if (data.unlimited_quota) {
         return
       }
@@ -65,6 +90,7 @@ export type ApiKeyFormValues = z.infer<ReturnType<typeof getApiKeyFormSchema>>
 
 export const API_KEY_FORM_DEFAULT_VALUES: ApiKeyFormValues = {
   name: '',
+  key: '',
   remain_quota_dollars: 10,
   expired_time: undefined,
   unlimited_quota: true,
@@ -97,6 +123,7 @@ export function transformFormDataToPayload(
 ): ApiKeyFormData {
   return {
     name: data.name,
+    key: data.key?.trim() || undefined,
     remain_quota: data.unlimited_quota
       ? 0
       : parseQuotaFromDollars(data.remain_quota_dollars || 0),
@@ -120,6 +147,7 @@ export function transformApiKeyToFormDefaults(
 ): ApiKeyFormValues {
   return {
     name: apiKey.name,
+    key: '',
     remain_quota_dollars: apiKey.unlimited_quota
       ? 0
       : quotaUnitsToDollars(apiKey.remain_quota),

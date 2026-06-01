@@ -224,7 +224,8 @@ func UpdateOption(c *gin.Context) {
 			return
 		}
 	case "GroupRatio":
-		err = ratio_setting.CheckGroupRatio(option.Value.(string))
+		normalized, normalizeErr := ratio_setting.NormalizeGroupRatioJSONString(option.Value.(string))
+		err = normalizeErr
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,
@@ -232,6 +233,18 @@ func UpdateOption(c *gin.Context) {
 			})
 			return
 		}
+		option.Value = normalized
+	case "GroupGroupRatio":
+		normalized, normalizeErr := ratio_setting.NormalizeGroupGroupRatioJSONString(option.Value.(string))
+		err = normalizeErr
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		option.Value = normalized
 	case "ImageRatio":
 		err = ratio_setting.UpdateImageRatioByJSONString(option.Value.(string))
 		if err != nil {

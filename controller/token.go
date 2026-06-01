@@ -9,7 +9,9 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,6 +31,58 @@ func buildMaskedTokenResponses(tokens []*model.Token) []*model.Token {
 		maskedTokens = append(maskedTokens, buildMaskedTokenResponse(token))
 	}
 	return maskedTokens
+}
+
+const maxCustomTokenKeyLength = 128
+
+func isValidCustomTokenKeyChar(r rune) bool {
+	return (r >= '0' && r <= '9') ||
+		(r >= 'a' && r <= 'z') ||
+		(r >= 'A' && r <= 'Z') ||
+		r == '_'
+}
+
+func normalizeCustomTokenKey(rawKey string) (string, bool, bool) {
+	key := strings.TrimSpace(rawKey)
+	if key == "" {
+		return "", false, true
+	}
+	key = strings.TrimPrefix(key, "sk-")
+	if key == "" || len(key) > maxCustomTokenKeyLength {
+		return "", true, false
+	}
+	for _, r := range key {
+		if !isValidCustomTokenKeyChar(r) {
+			return "", true, false
+		}
+	}
+	return key, true, true
+}
+
+func getTokenRequestUserGroup(c *gin.Context) string {
+	if userGroup := c.GetString("user_group"); userGroup != "" {
+		return userGroup
+	}
+	if userGroup := c.GetString("group"); userGroup != "" {
+		return userGroup
+	}
+	userGroup, _ := model.GetUserGroup(c.GetInt("id"), false)
+	return userGroup
+}
+
+func validateAndNormalizeTokenGroup(c *gin.Context, rawGroup string) (string, bool) {
+	group := strings.TrimSpace(rawGroup)
+	if service.CanSetTokenGroup(c.GetInt("role"), getTokenRequestUserGroup(c), group) {
+		return group, true
+	}
+	if ratio_setting.IsOwnerGroup(group) {
+		common.ApiErrorMsg(c, "owner 分组仅允许管理员或 root 用户设置")
+	} else if group == "" {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+	} else {
+		common.ApiErrorMsg(c, fmt.Sprintf("无权设置 %s 分组", group))
+	}
+	return "", false
 }
 
 func GetAllTokens(c *gin.Context) {
@@ -201,10 +255,35 @@ func AddToken(c *gin.Context) {
 		})
 		return
 	}
-	key, err := common.GenerateKey()
-	if err != nil {
-		common.ApiErrorI18n(c, i18n.MsgTokenGenerateFailed)
-		common.SysLog("failed to generate token key: " + err.Error())
+	key, hasCustomKey, validCustomKey := normalizeCustomTokenKey(token.Key)
+	if !validCustomKey {
+		common.ApiErrorI18n(c, i18n.MsgTokenCustomKeyInvalid)
+		return
+	}
+	if hasCustomKey {
+		if c.GetInt("role") != common.RoleRootUser {
+			common.ApiErrorI18n(c, i18n.MsgTokenCustomKeyRootOnly)
+			return
+		}
+		exists, err := model.TokenKeyExists(key)
+		if err != nil {
+			common.ApiError(c, err)
+			return
+		}
+		if exists {
+			common.ApiErrorI18n(c, i18n.MsgTokenCustomKeyExists)
+			return
+		}
+	} else {
+		key, err = common.GenerateKey()
+		if err != nil {
+			common.ApiErrorI18n(c, i18n.MsgTokenGenerateFailed)
+			common.SysLog("failed to generate token key: " + err.Error())
+			return
+		}
+	}
+	group, ok := validateAndNormalizeTokenGroup(c, token.Group)
+	if !ok {
 		return
 	}
 	cleanToken := model.Token{
@@ -219,7 +298,7 @@ func AddToken(c *gin.Context) {
 		ModelLimitsEnabled: token.ModelLimitsEnabled,
 		ModelLimits:        token.ModelLimits,
 		AllowIps:           token.AllowIps,
-		Group:              token.Group,
+		Group:              group,
 		CrossGroupRetry:    token.CrossGroupRetry,
 	}
 	err = cleanToken.Insert()
@@ -297,7 +376,11 @@ func UpdateToken(c *gin.Context) {
 		cleanToken.ModelLimitsEnabled = token.ModelLimitsEnabled
 		cleanToken.ModelLimits = token.ModelLimits
 		cleanToken.AllowIps = token.AllowIps
-		cleanToken.Group = token.Group
+		group, ok := validateAndNormalizeTokenGroup(c, token.Group)
+		if !ok {
+			return
+		}
+		cleanToken.Group = group
 		cleanToken.CrossGroupRetry = token.CrossGroupRetry
 	}
 	err = cleanToken.Update()

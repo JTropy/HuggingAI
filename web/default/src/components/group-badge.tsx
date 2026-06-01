@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
+import { normalizeGroupRatio } from '@/lib/group-ratio'
 import { cn } from '@/lib/utils'
 import { StatusBadge, type StatusBadgeProps } from './status-badge'
 
@@ -85,7 +86,9 @@ export function GroupBadge(props: GroupBadgeProps) {
     />
   )
 
-  if (ratio == null) {
+  const normalizedRatio = normalizeGroupRatio(groupName, ratio)
+
+  if (normalizedRatio == null) {
     return badge
   }
 
@@ -95,10 +98,10 @@ export function GroupBadge(props: GroupBadgeProps) {
       <span
         className={cn(
           'inline-flex h-5 items-center rounded-full px-1.5 font-mono text-xs leading-none font-medium tabular-nums',
-          getGroupRatioClassName(ratio)
+          getGroupRatioClassName(normalizedRatio)
         )}
       >
-        <span>{ratio}x</span>
+        <span>{normalizedRatio}x</span>
       </span>
     </span>
   )

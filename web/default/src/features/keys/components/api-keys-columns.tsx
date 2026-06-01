@@ -21,6 +21,7 @@ import { type ColumnDef } from '@tanstack/react-table'
 import { useTranslation } from 'react-i18next'
 import { getUserGroups } from '@/lib/api'
 import { formatQuota, formatTimestampToDate } from '@/lib/format'
+import { normalizeGroupRatio } from '@/lib/group-ratio'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
@@ -57,7 +58,7 @@ function useGroupRatios(): Record<string, number> {
       const ratios: Record<string, number> = {}
       for (const [group, info] of Object.entries(res.data)) {
         if (typeof info.ratio === 'number') {
-          ratios[group] = info.ratio
+          ratios[group] = normalizeGroupRatio(group, info.ratio)
         }
       }
       return ratios

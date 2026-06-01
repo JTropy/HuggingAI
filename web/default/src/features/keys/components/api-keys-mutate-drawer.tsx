@@ -23,8 +23,11 @@ import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, KeyRound, Settings2, WalletCards } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/stores/auth-store'
 import { getUserModels, getUserGroups } from '@/lib/api'
 import { getCurrencyDisplay, getCurrencyLabel } from '@/lib/currency'
+import { normalizeGroupRatio } from '@/lib/group-ratio'
+import { ROLE } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import { useStatus } from '@/hooks/use-status'
 import { Button } from '@/components/ui/button'
@@ -96,6 +99,9 @@ export function ApiKeysMutateDrawer({
   const isUpdate = !!currentRow
   const { triggerRefresh } = useApiKeys()
   const { status } = useStatus()
+  const isRoot = useAuthStore(
+    (state) => state.auth.user?.role === ROLE.SUPER_ADMIN
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const defaultUseAutoGroup = status?.default_use_auto_group === true
@@ -121,7 +127,7 @@ export function ApiKeysMutateDrawer({
       value: key,
       label: key,
       desc: info.desc || key,
-      ratio: info.ratio,
+      ratio: normalizeGroupRatio(key, info.ratio),
     })
   )
   const backendHasAuto = groups.some((g) => g.value === 'auto')
@@ -294,6 +300,32 @@ export function ApiKeysMutateDrawer({
                   </FormItem>
                 )}
               />
+
+              {!isUpdate && isRoot && (
+                <FormField
+                  control={form.control}
+                  name='key'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Custom API Key')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder={t(
+                            'Leave blank to generate automatically'
+                          )}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        {t(
+                          'Use letters, numbers, or underscores. The sk- prefix is optional.'
+                        )}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}

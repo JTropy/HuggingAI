@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useState, useMemo, useEffect, useCallback, memo } from 'react'
 import { Pencil, Plus, Trash2, GripVertical, ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { normalizeGroupRatio } from '@/lib/group-ratio'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -95,6 +96,10 @@ function normalizeRatio(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 1
 }
 
+function normalizeEditableGroupRatio(groupName: string, value: unknown): number {
+  return normalizeGroupRatio(groupName, normalizeRatio(value))
+}
+
 function buildGroupPricingRows(
   groupRatio: string,
   userUsableGroups: string
@@ -112,7 +117,7 @@ function buildGroupPricingRows(
   return Array.from(names).map((name) => ({
     _id: createGroupPricingId(),
     name,
-    ratio: normalizeRatio(ratioMap[name]),
+    ratio: normalizeEditableGroupRatio(name, ratioMap[name]),
     selectable: Object.prototype.hasOwnProperty.call(usableMap, name),
     description: String(usableMap[name] ?? ''),
   }))
@@ -125,7 +130,7 @@ function serializeGroupPricingRows(rows: GroupPricingRow[]) {
   for (const row of rows) {
     const name = row.name.trim()
     if (!name) continue
-    groupRatio[name] = normalizeRatio(row.ratio)
+    groupRatio[name] = normalizeEditableGroupRatio(name, row.ratio)
     if (row.selectable) {
       userUsableGroups[name] = row.description
     }
@@ -796,7 +801,17 @@ function GroupPricingTable({
       value: string | number | boolean
     ) => {
       emitRows(
-        rows.map((row) => (row._id === id ? { ...row, [field]: value } : row))
+        rows.map((row) => {
+          if (row._id !== id) return row
+          const nextRow = { ...row, [field]: value } as GroupPricingRow
+          if (field === 'name' || field === 'ratio') {
+            nextRow.ratio = normalizeEditableGroupRatio(
+              nextRow.name,
+              nextRow.ratio
+            )
+          }
+          return nextRow
+        })
       )
     },
     [emitRows, rows]

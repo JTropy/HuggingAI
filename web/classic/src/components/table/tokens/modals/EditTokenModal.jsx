@@ -27,6 +27,7 @@ import {
   getCurrencyConfig,
   getModelCategories,
   selectFilter,
+  isRoot,
 } from '../../../../helpers';
 import {
   quotaToDisplayAmount,
@@ -72,6 +73,7 @@ const EditTokenModal = (props) => {
 
   const getInitValues = () => ({
     name: '',
+    key: '',
     remain_quota: 0,
     remain_amount: 0,
     expired_time: -1,
@@ -252,9 +254,26 @@ const EditTokenModal = (props) => {
       }
     } else {
       const count = parseInt(values.tokenCount, 10) || 1;
+      const customKey = (values.key || '').trim();
+      if (customKey !== '') {
+        const normalizedKey = customKey.startsWith('sk-')
+          ? customKey.slice(3)
+          : customKey;
+        if (!/^[A-Za-z0-9_]{1,128}$/.test(normalizedKey)) {
+          showError(t('自定义 API 密钥只能包含字母、数字和下划线，长度 1-128，sk- 前缀可选'));
+          setLoading(false);
+          return;
+        }
+        if (count > 1) {
+          showError(t('自定义 API 密钥只能在创建单个密钥时使用'));
+          setLoading(false);
+          return;
+        }
+      }
       let successCount = 0;
       for (let i = 0; i < count; i++) {
         let { tokenCount: _tc, ...localInputs } = values;
+        localInputs.key = customKey || undefined;
         const baseName =
           values.name.trim() === '' ? 'default' : values.name.trim();
         if (i !== 0 || values.name.trim() === '') {
@@ -382,6 +401,19 @@ const EditTokenModal = (props) => {
                       showClear
                     />
                   </Col>
+                  {!isEdit && isRoot() && (
+                    <Col span={24}>
+                      <Form.Input
+                        field='key'
+                        label={t('自定义 API 密钥')}
+                        placeholder={t('留空则自动生成')}
+                        extraText={t(
+                          '可使用字母、数字或下划线，sk- 前缀可选',
+                        )}
+                        showClear
+                      />
+                    </Col>
+                  )}
                   <Col span={24}>
                     {groups.length > 0 ? (
                       <Form.Select

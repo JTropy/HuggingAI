@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useMemo, useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { normalizeGroupRatio } from '@/lib/group-ratio'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -52,11 +53,18 @@ type ApiKeyGroupComboboxProps = {
 }
 
 function formatGroupRatio(
+  group: string | undefined,
   ratio: ApiKeyGroupOption['ratio'],
   ratioLabel: string
 ) {
-  if (ratio === undefined || ratio === null || ratio === '') return null
-  return `${ratio}x ${ratioLabel}`
+  const normalizedRatio = normalizeGroupRatio(group, ratio)
+  if (
+    normalizedRatio === undefined ||
+    normalizedRatio === null ||
+    normalizedRatio === ''
+  )
+    return null
+  return `${normalizedRatio}x ${ratioLabel}`
 }
 
 function getRatioBadgeClassName(ratio: ApiKeyGroupOption['ratio']) {
@@ -76,9 +84,16 @@ function getRatioBadgeClassName(ratio: ApiKeyGroupOption['ratio']) {
   return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'
 }
 
-function GroupRatioBadge({ ratio }: { ratio: ApiKeyGroupOption['ratio'] }) {
+function GroupRatioBadge({
+  group,
+  ratio,
+}: {
+  group?: string
+  ratio: ApiKeyGroupOption['ratio']
+}) {
   const { t } = useTranslation()
-  const label = formatGroupRatio(ratio, t('Ratio'))
+  const normalizedRatio = normalizeGroupRatio(group, ratio)
+  const label = formatGroupRatio(group, ratio, t('Ratio'))
 
   if (!label) return null
 
@@ -87,7 +102,7 @@ function GroupRatioBadge({ ratio }: { ratio: ApiKeyGroupOption['ratio'] }) {
       variant='outline'
       className={cn(
         'max-w-24 shrink-0 truncate text-[10px] sm:max-w-none sm:text-xs',
-        getRatioBadgeClassName(ratio)
+        getRatioBadgeClassName(normalizedRatio)
       )}
     >
       {label}
@@ -154,7 +169,10 @@ export function ApiKeyGroupCombobox({
             )}
           </span>
           <span className='hidden sm:block'>
-            <GroupRatioBadge ratio={selectedOption?.ratio} />
+            <GroupRatioBadge
+              group={selectedOption?.value}
+              ratio={selectedOption?.ratio}
+            />
           </span>
         </span>
         <ChevronsUpDown className='h-4 w-4 shrink-0 opacity-50' />
@@ -197,7 +215,7 @@ export function ApiKeyGroupCombobox({
                       </span>
                     )}
                   </span>
-                  <GroupRatioBadge ratio={option.ratio} />
+                  <GroupRatioBadge group={option.value} ratio={option.ratio} />
                 </CommandItem>
               ))}
             </CommandGroup>

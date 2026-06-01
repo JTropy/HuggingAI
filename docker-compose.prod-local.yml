@@ -1,0 +1,87 @@
+# Production-style local source deployment.
+#
+# This builds the full image from the current workspace using Dockerfile:
+# frontend assets are compiled first, then embedded into the Go server.
+# Browser and API traffic share the same public port.
+#
+# Usage:
+#   docker compose -f docker-compose.prod-local.yml up -d --build
+#   open http://localhost:3005
+
+name: new-api-prod
+
+services:
+  new-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: new-api:local-prod
+    container_name: new-api
+    restart: always
+    command: --log-dir /app/logs
+    ports:
+      - "${NEW_API_PORT:-3005}:3000"
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    environment:
+      - SQL_DSN=postgresql://${POSTGRES_USER:-root}:${POSTGRES_PASSWORD:-123456}@postgres:5432/${POSTGRES_DB:-new-api}
+      - REDIS_CONN_STRING=redis://:${REDIS_PASSWORD:-123456}@redis:6379
+      - TZ=${TZ:-Asia/Shanghai}
+      - ERROR_LOG_ENABLED=true
+      - BATCH_UPDATE_ENABLED=true
+      - GLOBAL_WEB_RATE_LIMIT_ENABLE=false
+      - NODE_NAME=${NODE_NAME:-new-api-node-1}
+      - SESSION_SECRET=${SESSION_SECRET:-change-this-session-secret}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - new-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o '\"success\":\\s*true' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    command: ["sh", "-c", "redis-server --requirepass \"$${REDIS_PASSWORD:-123456}\""]
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-123456}
+    networks:
+      - new-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD:-123456}\" ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-root}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-123456}
+      - POSTGRES_DB=${POSTGRES_DB:-new-api}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - new-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER:-root}\" -d \"$${POSTGRES_DB:-new-api}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pg_data:
+
+networks:
+  new-api-network:
+    driver: bridge

@@ -276,6 +276,15 @@ func GetTokenByKey(key string, fromDB bool) (token *Token, err error) {
 	return token, err
 }
 
+func TokenKeyExists(key string) (bool, error) {
+	var token Token
+	err := DB.Unscoped().Select("id").Where(&Token{Key: key}).First(&token).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	}
+	return err == nil, err
+}
+
 func (token *Token) Insert() error {
 	var err error
 	err = DB.Create(token).Error

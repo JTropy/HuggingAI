@@ -48,21 +48,21 @@ type sqliteColumnInfo struct {
 }
 
 type legacyToken struct {
-	Id                 int            `gorm:"primaryKey"`
-	UserId             int            `gorm:"index"`
-	Key                string         `gorm:"column:key;type:char(48);uniqueIndex"`
-	Status             int            `gorm:"default:1"`
-	Name               string         `gorm:"index"`
-	CreatedTime        int64          `gorm:"bigint"`
-	AccessedTime       int64          `gorm:"bigint"`
-	ExpiredTime        int64          `gorm:"bigint;default:-1"`
-	RemainQuota        int            `gorm:"default:0"`
+	Id                 int    `gorm:"primaryKey"`
+	UserId             int    `gorm:"index"`
+	Key                string `gorm:"column:key;type:char(48);uniqueIndex"`
+	Status             int    `gorm:"default:1"`
+	Name               string `gorm:"index"`
+	CreatedTime        int64  `gorm:"bigint"`
+	AccessedTime       int64  `gorm:"bigint"`
+	ExpiredTime        int64  `gorm:"bigint;default:-1"`
+	RemainQuota        int    `gorm:"default:0"`
 	UnlimitedQuota     bool
 	ModelLimitsEnabled bool
-	ModelLimits        string         `gorm:"type:text"`
-	AllowIps           *string        `gorm:"default:''"`
-	UsedQuota          int            `gorm:"default:0"`
-	Group              string         `gorm:"column:group;default:''"`
+	ModelLimits        string  `gorm:"type:text"`
+	AllowIps           *string `gorm:"default:''"`
+	UsedQuota          int     `gorm:"default:0"`
+	Group              string  `gorm:"column:group;default:''"`
 	CrossGroupRetry    bool
 	DeletedAt          gorm.DeletedAt `gorm:"index"`
 }
@@ -388,6 +388,191 @@ func TestTokenMigrationFromChar48ToVarchar128Postgres(t *testing.T) {
 
 	db, managedTokensTable := openTokenControllerExternalDB(t, "postgres", dsn)
 	runTokenMigrationCompatibilityTest(t, db, "postgres", managedTokensTable)
+}
+
+func TestAddTokenAllowsRootCustomKey(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	body := map[string]any{
+		"name":                 "root-custom",
+		"key":                  "sk-Custom_Key123",
+		"expired_time":         -1,
+		"remain_quota":         0,
+		"unlimited_quota":      true,
+		"model_limits_enabled": false,
+		"model_limits":         "",
+		"group":                "default",
+		"cross_group_retry":    false,
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPost, "/api/token/", body, 1)
+	ctx.Set("role", common.RoleRootUser)
+	AddToken(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if !response.Success {
+		t.Fatalf("expected root custom token creation to succeed, got message: %s", response.Message)
+	}
+
+	var token model.Token
+	if err := db.First(&token, "user_id = ? AND name = ?", 1, "root-custom").Error; err != nil {
+		t.Fatalf("failed to load custom token: %v", err)
+	}
+	if token.Key != "Custom_Key123" {
+		t.Fatalf("expected normalized custom key %q, got %q", "Custom_Key123", token.Key)
+	}
+}
+
+func TestAddTokenRejectsCustomKeyForNonRoot(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	body := map[string]any{
+		"name":                 "common-custom",
+		"key":                  "Common_Key123",
+		"expired_time":         -1,
+		"remain_quota":         0,
+		"unlimited_quota":      true,
+		"model_limits_enabled": false,
+		"model_limits":         "",
+		"group":                "default",
+		"cross_group_retry":    false,
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPost, "/api/token/", body, 1)
+	ctx.Set("role", common.RoleCommonUser)
+	AddToken(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if response.Success {
+		t.Fatalf("expected non-root custom token creation to fail")
+	}
+
+	var count int64
+	if err := db.Model(&model.Token{}).Count(&count).Error; err != nil {
+		t.Fatalf("failed to count tokens: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no tokens to be created, got %d", count)
+	}
+}
+
+func TestAddTokenRejectsDuplicateCustomKey(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	seedToken(t, db, 7, "existing-token", "Duplicate_Key123")
+	body := map[string]any{
+		"name":                 "duplicate-custom",
+		"key":                  "Duplicate_Key123",
+		"expired_time":         -1,
+		"remain_quota":         0,
+		"unlimited_quota":      true,
+		"model_limits_enabled": false,
+		"model_limits":         "",
+		"group":                "default",
+		"cross_group_retry":    false,
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPost, "/api/token/", body, 1)
+	ctx.Set("role", common.RoleRootUser)
+	AddToken(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if response.Success {
+		t.Fatalf("expected duplicate custom token key to fail")
+	}
+}
+
+func TestAddTokenRejectsOwnerGroupForCommonUser(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	body := map[string]any{
+		"name":                 "common-owner",
+		"expired_time":         -1,
+		"remain_quota":         0,
+		"unlimited_quota":      true,
+		"model_limits_enabled": false,
+		"model_limits":         "",
+		"group":                "owner",
+		"cross_group_retry":    false,
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPost, "/api/token/", body, 1)
+	ctx.Set("role", common.RoleCommonUser)
+	AddToken(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if response.Success {
+		t.Fatalf("expected common user owner-group token creation to fail")
+	}
+
+	var count int64
+	if err := db.Model(&model.Token{}).Count(&count).Error; err != nil {
+		t.Fatalf("failed to count tokens: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no tokens to be created, got %d", count)
+	}
+}
+
+func TestAddTokenAllowsOwnerGroupForAdmin(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	body := map[string]any{
+		"name":                 "admin-owner",
+		"expired_time":         -1,
+		"remain_quota":         0,
+		"unlimited_quota":      true,
+		"model_limits_enabled": false,
+		"model_limits":         "",
+		"group":                "owner",
+		"cross_group_retry":    false,
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPost, "/api/token/", body, 1)
+	ctx.Set("role", common.RoleAdminUser)
+	AddToken(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if !response.Success {
+		t.Fatalf("expected admin owner-group token creation to succeed, got message: %s", response.Message)
+	}
+
+	var token model.Token
+	if err := db.First(&token, "user_id = ? AND name = ?", 1, "admin-owner").Error; err != nil {
+		t.Fatalf("failed to load owner token: %v", err)
+	}
+	if token.Group != "owner" {
+		t.Fatalf("expected owner group, got %q", token.Group)
+	}
+}
+
+func TestUpdateTokenRejectsOwnerGroupForCommonUser(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	token := seedToken(t, db, 1, "default-token", "ownerreject1234")
+	body := map[string]any{
+		"id":                   token.Id,
+		"name":                 "default-token",
+		"status":               common.TokenStatusEnabled,
+		"expired_time":         -1,
+		"remain_quota":         100,
+		"unlimited_quota":      true,
+		"model_limits_enabled": false,
+		"model_limits":         "",
+		"group":                "owner",
+		"cross_group_retry":    false,
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPut, fmt.Sprintf("/api/token/%d", token.Id), body, 1)
+	ctx.Set("role", common.RoleCommonUser)
+	UpdateToken(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if response.Success {
+		t.Fatalf("expected common user owner-group token update to fail")
+	}
+
+	var refreshed model.Token
+	if err := db.First(&refreshed, token.Id).Error; err != nil {
+		t.Fatalf("failed to reload token: %v", err)
+	}
+	if refreshed.Group != "default" {
+		t.Fatalf("expected group to remain default, got %q", refreshed.Group)
+	}
 }
 
 func TestGetAllTokensMasksKeyInResponse(t *testing.T) {
