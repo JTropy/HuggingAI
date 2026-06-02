@@ -36,7 +36,6 @@ export let API = axios.create({
   },
 });
 
-
 function redirectToOAuthUrl(url, options = {}) {
   const { openInNewTab = false } = options;
   const targetUrl = typeof url === 'string' ? url : url.toString();
@@ -48,7 +47,6 @@ function redirectToOAuthUrl(url, options = {}) {
 
   window.location.assign(targetUrl);
 }
-
 
 function patchAPIInstance(instance) {
   const originalGet = instance.get.bind(instance);
@@ -330,7 +328,9 @@ export async function onCustomOAuthClicked(provider, options = {}) {
   if (!state) return;
 
   try {
-    const redirect_uri = `${window.location.origin}/oauth/${provider.slug}`;
+    const status = JSON.parse(localStorage.getItem('status') || '{}');
+    const redirectBase = status?.server_address || window.location.origin;
+    const redirect_uri = `${redirectBase.replace(/\/$/, '')}/oauth/${provider.slug}`;
 
     // Check if authorization_endpoint is a full URL or relative path
     let authUrl;

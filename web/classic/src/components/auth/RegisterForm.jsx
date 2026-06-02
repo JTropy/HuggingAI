@@ -27,7 +27,7 @@ import {
   showSuccess,
   updateAPI,
   getSystemName,
-  getOAuthProviderIcon,
+  getCustomOAuthProviderIcon,
   setUserData,
   onDiscordOAuthClicked,
   onCustomOAuthClicked,
@@ -64,6 +64,8 @@ import { UserContext } from '../../context/User';
 import { StatusContext } from '../../context/Status';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord } from 'react-icons/si';
+
+const BASEQ_REGISTRATION_PROVIDER_SLUG = 'baseq';
 
 const RegisterForm = () => {
   let navigate = useNavigate();
@@ -129,15 +131,32 @@ const RegisterForm = () => {
       return {};
     }
   }, [statusState?.status]);
+  const registrationStatus = useMemo(
+    () => ({
+      ...status,
+      github_oauth: false,
+      discord_oauth: false,
+      oidc_enabled: false,
+      wechat_login: false,
+      linuxdo_oauth: false,
+      telegram_oauth: false,
+      custom_oauth_providers: (status.custom_oauth_providers || []).filter(
+        (provider) =>
+          provider.slug.toLowerCase() === BASEQ_REGISTRATION_PROVIDER_SLUG,
+      ),
+    }),
+    [status],
+  );
+  const passwordRegisterEnabled = false;
   const hasCustomOAuthProviders =
-    (status.custom_oauth_providers || []).length > 0;
+    (registrationStatus.custom_oauth_providers || []).length > 0;
   const hasOAuthRegisterOptions = Boolean(
-    status.github_oauth ||
-      status.discord_oauth ||
-      status.oidc_enabled ||
-      status.wechat_login ||
-      status.linuxdo_oauth ||
-      status.telegram_oauth ||
+    registrationStatus.github_oauth ||
+      registrationStatus.discord_oauth ||
+      registrationStatus.oidc_enabled ||
+      registrationStatus.wechat_login ||
+      registrationStatus.linuxdo_oauth ||
+      registrationStatus.telegram_oauth ||
       hasCustomOAuthProviders,
   );
 
@@ -410,7 +429,7 @@ const RegisterForm = () => {
             </div>
             <div className='px-2 py-8'>
               <div className='space-y-3'>
-                {status.wechat_login && (
+                {registrationStatus.wechat_login && (
                   <Button
                     theme='outline'
                     className='w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors'
@@ -425,7 +444,7 @@ const RegisterForm = () => {
                   </Button>
                 )}
 
-                {status.github_oauth && (
+                {registrationStatus.github_oauth && (
                   <Button
                     theme='outline'
                     className='w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors'
@@ -439,7 +458,7 @@ const RegisterForm = () => {
                   </Button>
                 )}
 
-                {status.discord_oauth && (
+                {registrationStatus.discord_oauth && (
                   <Button
                     theme='outline'
                     className='w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors'
@@ -460,7 +479,7 @@ const RegisterForm = () => {
                   </Button>
                 )}
 
-                {status.oidc_enabled && (
+                {registrationStatus.oidc_enabled && (
                   <Button
                     theme='outline'
                     className='w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors'
@@ -473,7 +492,7 @@ const RegisterForm = () => {
                   </Button>
                 )}
 
-                {status.linuxdo_oauth && (
+                {registrationStatus.linuxdo_oauth && (
                   <Button
                     theme='outline'
                     className='w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors'
@@ -494,14 +513,14 @@ const RegisterForm = () => {
                   </Button>
                 )}
 
-                {status.custom_oauth_providers &&
-                  status.custom_oauth_providers.map((provider) => (
+                {registrationStatus.custom_oauth_providers &&
+                  registrationStatus.custom_oauth_providers.map((provider) => (
                     <Button
                       key={provider.slug}
                       theme='outline'
                       className='w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors'
                       type='tertiary'
-                      icon={getOAuthProviderIcon(provider.icon || '', 20)}
+                      icon={getCustomOAuthProviderIcon(provider, 20)}
                       onClick={() => handleCustomOAuthClick(provider)}
                       loading={customOAuthLoading[provider.slug]}
                     >
@@ -511,7 +530,7 @@ const RegisterForm = () => {
                     </Button>
                   ))}
 
-                {status.telegram_oauth && (
+                {registrationStatus.telegram_oauth && (
                   <div className='flex justify-center my-2'>
                     <TelegramLoginButton
                       dataOnauth={onTelegramLoginClicked}
@@ -520,20 +539,24 @@ const RegisterForm = () => {
                   </div>
                 )}
 
-                <Divider margin='12px' align='center'>
-                  {t('或')}
-                </Divider>
+                {passwordRegisterEnabled && (
+                  <>
+                    <Divider margin='12px' align='center'>
+                      {t('或')}
+                    </Divider>
 
-                <Button
-                  theme='solid'
-                  type='primary'
-                  className='w-full h-12 flex items-center justify-center bg-black text-white !rounded-full hover:bg-gray-800 transition-colors'
-                  icon={<IconMail size='large' />}
-                  onClick={handleEmailRegisterClick}
-                  loading={emailRegisterLoading}
-                >
-                  <span className='ml-3'>{t('使用 用户名 注册')}</span>
-                </Button>
+                    <Button
+                      theme='solid'
+                      type='primary'
+                      className='w-full h-12 flex items-center justify-center bg-black text-white !rounded-full hover:bg-gray-800 transition-colors'
+                      icon={<IconMail size='large' />}
+                      onClick={handleEmailRegisterClick}
+                      loading={emailRegisterLoading}
+                    >
+                      <span className='ml-3'>{t('使用 用户名 注册')}</span>
+                    </Button>
+                  </>
+                )}
               </div>
 
               <div className='mt-6 text-center text-sm'>
@@ -692,7 +715,7 @@ const RegisterForm = () => {
                 </div>
               </Form>
 
-              {hasOAuthRegisterOptions && (
+              {passwordRegisterEnabled && hasOAuthRegisterOptions && (
                 <>
                   <Divider margin='12px' align='center'>
                     {t('或')}
@@ -781,13 +804,13 @@ const RegisterForm = () => {
         style={{ top: '50%', left: '-120px' }}
       />
       <div className='w-full max-w-sm mt-[60px]'>
-        {showEmailRegister ||
-        !hasOAuthRegisterOptions
+        {passwordRegisterEnabled &&
+        (showEmailRegister || !hasOAuthRegisterOptions)
           ? renderEmailRegisterForm()
           : renderOAuthOptions()}
         {renderWeChatLoginModal()}
 
-        {turnstileEnabled && (
+        {passwordRegisterEnabled && turnstileEnabled && (
           <div className='flex justify-center mt-6'>
             <Turnstile
               sitekey={turnstileSiteKey}

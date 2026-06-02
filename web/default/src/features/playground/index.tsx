@@ -41,6 +41,9 @@ export function Playground() {
     updateConfig,
   } = usePlaygroundState()
 
+  const failedToLoadModelsMessage = t('Failed to load playground models')
+  const failedToLoadGroupsMessage = t('Failed to load playground groups')
+
   const { sendChat, stopGeneration, isGenerating } = useChatHandler({
     config,
     parameterEnabled,
@@ -54,15 +57,13 @@ export function Playground() {
 
   // Load models
   const { data: modelsData, isLoading: isLoadingModels } = useQuery({
-    queryKey: ['playground-models'],
+    queryKey: ['playground-models', failedToLoadModelsMessage],
     queryFn: async () => {
       try {
         return await getUserModels()
       } catch (error) {
         toast.error(
-          error instanceof Error
-            ? error.message
-            : t('Failed to load playground models')
+          error instanceof Error ? error.message : failedToLoadModelsMessage
         )
         return []
       }
@@ -71,15 +72,13 @@ export function Playground() {
 
   // Load groups
   const { data: groupsData } = useQuery({
-    queryKey: ['playground-groups'],
+    queryKey: ['playground-groups', failedToLoadGroupsMessage],
     queryFn: async () => {
       try {
         return await getUserGroups()
       } catch (error) {
         toast.error(
-          error instanceof Error
-            ? error.message
-            : t('Failed to load playground groups')
+          error instanceof Error ? error.message : failedToLoadGroupsMessage
         )
         return []
       }

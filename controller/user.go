@@ -140,7 +140,7 @@ func Register(c *gin.Context) {
 		common.ApiErrorI18n(c, i18n.MsgUserRegisterDisabled)
 		return
 	}
-	if !common.PasswordRegisterEnabled {
+	if !common.PasswordRegisterEnabled || !isPasswordRegistrationAllowed() {
 		common.ApiErrorI18n(c, i18n.MsgUserPasswordRegisterDisabled)
 		return
 	}
@@ -782,8 +782,8 @@ func DeleteUser(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	originUser, err := model.GetUserById(id, false)
-	if err != nil {
+	var originUser model.User
+	if err := model.DB.Unscoped().Omit("password").First(&originUser, "id = ?", id).Error; err != nil {
 		common.ApiError(c, err)
 		return
 	}

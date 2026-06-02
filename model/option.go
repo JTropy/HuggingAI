@@ -539,6 +539,14 @@ func updateOptionMap(key string, value string) (err error) {
 		}
 		err = ratio_setting.UpdateGroupGroupRatioByJSONString(value)
 	case "UserUsableGroups":
+		value, err = setting.NormalizeUserUsableGroupsJSONString(value)
+		if err == nil {
+			common.OptionMap[key] = value
+		}
+		if err != nil {
+			common.OptionMap[key] = setting.UserUsableGroups2JSONString()
+			break
+		}
 		err = setting.UpdateUserUsableGroupsByJSONString(value)
 	case "CompletionRatio":
 		err = ratio_setting.UpdateCompletionRatioByJSONString(value)

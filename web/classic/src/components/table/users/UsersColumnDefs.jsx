@@ -220,7 +220,15 @@ const renderOperations = (
   },
 ) => {
   if (record.DeletedAt !== null) {
-    return <></>;
+    return (
+      <Button
+        type='danger'
+        size='small'
+        onClick={() => showDeleteModal(record)}
+      >
+        {t('彻底删除')}
+      </Button>
+    );
   }
 
   const moreMenu = [
@@ -247,7 +255,7 @@ const renderOperations = (
     },
     {
       node: 'item',
-      name: t('注销'),
+      name: t('彻底删除'),
       type: 'danger',
       onClick: () => showDeleteModal(record),
     },

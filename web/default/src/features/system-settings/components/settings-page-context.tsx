@@ -61,6 +61,7 @@ export function SettingsPageProvider(props: SettingsPageProviderProps) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSuppressSettingsSectionHeader() {
   return useContext(SettingsPageContext).suppressSectionHeader
 }

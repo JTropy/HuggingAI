@@ -14,6 +14,8 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/setting"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
 	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
@@ -203,6 +205,9 @@ func newAuthenticatedContext(t *testing.T, method string, target string, body an
 		ctx.Request.Header.Set("Content-Type", "application/json")
 	}
 	ctx.Set("id", userID)
+	ctx.Set("role", common.RoleCommonUser)
+	ctx.Set("user_group", "default")
+	ctx.Set("group", "default")
 	return ctx, recorder
 }
 
@@ -499,6 +504,54 @@ func TestAddTokenRejectsOwnerGroupForCommonUser(t *testing.T) {
 	response := decodeAPIResponse(t, recorder)
 	if response.Success {
 		t.Fatalf("expected common user owner-group token creation to fail")
+	}
+
+	var count int64
+	if err := db.Model(&model.Token{}).Count(&count).Error; err != nil {
+		t.Fatalf("failed to count tokens: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no tokens to be created, got %d", count)
+	}
+}
+
+func TestAddTokenRejectsVipForDefaultUserWhenVipGloballyConfigured(t *testing.T) {
+	db := setupTokenControllerTestDB(t)
+	originalRatio := ratio_setting.GroupRatio2JSONString()
+	originalUsable := setting.UserUsableGroups2JSONString()
+	t.Cleanup(func() {
+		if err := ratio_setting.UpdateGroupRatioByJSONString(originalRatio); err != nil {
+			t.Fatalf("failed to restore group ratios: %v", err)
+		}
+		if err := setting.UpdateUserUsableGroupsByJSONString(originalUsable); err != nil {
+			t.Fatalf("failed to restore user usable groups: %v", err)
+		}
+	})
+
+	if err := ratio_setting.UpdateGroupRatioByJSONString(`{"default":1,"vip":1}`); err != nil {
+		t.Fatalf("failed to set group ratios: %v", err)
+	}
+	if err := setting.UpdateUserUsableGroupsByJSONString(`{"default":"默认分组","vip":"vip分组"}`); err != nil {
+		t.Fatalf("failed to set user usable groups: %v", err)
+	}
+
+	body := map[string]any{
+		"name":                 "default-vip",
+		"expired_time":         -1,
+		"remain_quota":         0,
+		"unlimited_quota":      true,
+		"model_limits_enabled": false,
+		"model_limits":         "",
+		"group":                "vip",
+		"cross_group_retry":    false,
+	}
+
+	ctx, recorder := newAuthenticatedContext(t, http.MethodPost, "/api/token/", body, 1)
+	AddToken(ctx)
+
+	response := decodeAPIResponse(t, recorder)
+	if response.Success {
+		t.Fatalf("expected default user vip-token creation to fail")
 	}
 
 	var count int64

@@ -201,7 +201,11 @@ export function useOAuthLogin(status: SystemStatus | null) {
         return
       }
 
-      const redirectUri = `${window.location.origin}/oauth/${provider.slug}`
+      const redirectBase =
+        status?.server_address ||
+        status?.data?.server_address ||
+        window.location.origin
+      const redirectUri = `${String(redirectBase).replace(/\/$/, '')}/oauth/${provider.slug}`
       const url = new URL(provider.authorization_endpoint)
       url.searchParams.set('client_id', provider.client_id)
       url.searchParams.set('redirect_uri', redirectUri)

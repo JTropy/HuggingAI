@@ -9,7 +9,16 @@ import (
 )
 
 func GetUserUsableGroups(userGroup string) map[string]string {
-	groupsCopy := setting.GetUserUsableGroupsCopy()
+	userGroup = strings.TrimSpace(userGroup)
+	configuredGroups := setting.GetUserUsableGroupsCopy()
+	if userGroup == "" {
+		return configuredGroups
+	}
+
+	groupsCopy := make(map[string]string)
+	if desc, ok := configuredGroups["default"]; ok {
+		groupsCopy["default"] = desc
+	}
 	if userGroup != "" {
 		specialSettings, b := ratio_setting.GetGroupRatioSetting().GroupSpecialUsableGroup.Get(userGroup)
 		if b {
@@ -22,16 +31,26 @@ func GetUserUsableGroups(userGroup string) map[string]string {
 				} else if strings.HasPrefix(specialGroup, "+:") {
 					// 添加分组
 					groupToAdd := strings.TrimPrefix(specialGroup, "+:")
+					if desc == "" {
+						desc = setting.GetUsableGroupDescription(groupToAdd)
+					}
 					groupsCopy[groupToAdd] = desc
 				} else {
 					// 直接添加分组
+					if desc == "" {
+						desc = setting.GetUsableGroupDescription(specialGroup)
+					}
 					groupsCopy[specialGroup] = desc
 				}
 			}
 		}
-		// 如果userGroup不在UserUsableGroups中，返回UserUsableGroups + userGroup
+		// 用户自己的分组始终可用，但全局 UserUsableGroups 里的其它分组不再自动授权给所有用户。
 		if _, ok := groupsCopy[userGroup]; !ok {
-			groupsCopy[userGroup] = "用户分组"
+			desc := setting.GetUsableGroupDescription(userGroup)
+			if desc == userGroup {
+				desc = "用户分组"
+			}
+			groupsCopy[userGroup] = desc
 		}
 	}
 	return groupsCopy
@@ -43,15 +62,25 @@ func GroupInUserUsableGroups(userGroup, groupName string) bool {
 }
 
 func CanUseTokenGroup(isAdmin bool, userGroup, groupName string) bool {
+	userGroup = strings.TrimSpace(userGroup)
 	groupName = strings.TrimSpace(groupName)
 	if groupName == "" {
 		return true
 	}
-	if groupName != "auto" && !ratio_setting.ContainsGroupRatio(groupName) {
+	if userGroup == "" && !isAdmin {
 		return false
 	}
 	if ratio_setting.IsOwnerGroup(groupName) {
-		return isAdmin
+		return isAdmin && ratio_setting.ContainsGroupRatio(groupName)
+	}
+	if groupName == "auto" {
+		return isAdmin || len(GetUserAutoGroup(userGroup)) > 0
+	}
+	if isAdmin && ratio_setting.ContainsGroupRatio(groupName) {
+		return true
+	}
+	if groupName != "auto" && !ratio_setting.ContainsGroupRatio(groupName) {
+		return userGroup != "" && groupName == userGroup && GroupInUserUsableGroups(userGroup, groupName)
 	}
 	return GroupInUserUsableGroups(userGroup, groupName)
 }
@@ -79,6 +108,9 @@ func GetUserGroupRatio(userGroup, group string) float64 {
 	ratio, ok := ratio_setting.GetGroupGroupRatio(userGroup, group)
 	if ok {
 		return ratio
+	}
+	if group != "" && !ratio_setting.ContainsGroupRatio(group) {
+		return 1
 	}
 	return ratio_setting.GetGroupRatio(group)
 }

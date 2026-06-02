@@ -324,8 +324,34 @@ func HardDeleteUserById(id int) error {
 	if id == 0 {
 		return errors.New("id 为空！")
 	}
-	err := DB.Unscoped().Delete(&User{}, "id = ?", id).Error
-	return err
+	if err := InvalidateUserTokensCache(id); err != nil {
+		common.SysLog(fmt.Sprintf("failed to invalidate tokens cache for user %d before hard delete: %s", id, err.Error()))
+	}
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Unscoped().Where("user_id = ?", id).Delete(&Token{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Unscoped().Where("user_id = ?", id).Delete(&UserOAuthBinding{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Unscoped().Where("user_id = ?", id).Delete(&PasskeyCredential{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Unscoped().Where("user_id = ?", id).Delete(&TwoFABackupCode{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Unscoped().Where("user_id = ?", id).Delete(&TwoFA{}).Error; err != nil {
+			return err
+		}
+		return tx.Unscoped().Delete(&User{}, "id = ?", id).Error
+	})
+	if err != nil {
+		return err
+	}
+	if err := invalidateUserCache(id); err != nil {
+		common.SysLog(fmt.Sprintf("failed to invalidate user cache for user %d after hard delete: %s", id, err.Error()))
+	}
+	return nil
 }
 
 func inviteUser(inviterId int) (err error) {
@@ -376,15 +402,32 @@ func (user *User) TransferAffQuotaToQuota(quota int) error {
 	return tx.Commit().Error
 }
 
+func normalizeNewUserGroup(user *User) {
+	user.Group = strings.TrimSpace(user.Group)
+	if user.Group == "" {
+		user.Group = "default"
+	}
+}
+
+func newUserRegistrationQuota() int {
+	quotaPerUnit := common.QuotaPerUnit
+	if quotaPerUnit <= 0 {
+		quotaPerUnit = 500 * 1000
+	}
+	return int(20 * quotaPerUnit)
+}
+
 func (user *User) Insert(inviterId int) error {
 	var err error
+	normalizeNewUserGroup(user)
 	if user.Password != "" {
 		user.Password, err = common.Password2Hash(user.Password)
 		if err != nil {
 			return err
 		}
 	}
-	user.Quota = common.QuotaForNewUser
+	registrationQuota := newUserRegistrationQuota()
+	user.Quota = registrationQuota
 	//user.SetAccessToken(common.GetUUID())
 	user.AffCode = common.GetRandomString(4)
 
@@ -415,8 +458,8 @@ func (user *User) Insert(inviterId int) error {
 		}
 	}
 
-	if common.QuotaForNewUser > 0 {
-		RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("新用户注册赠送 %s", logger.LogQuota(common.QuotaForNewUser)))
+	if registrationQuota > 0 {
+		RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("新用户注册赠送 %s", logger.LogQuota(registrationQuota)))
 	}
 	if inviterId != 0 && operation_setting.IsPaymentComplianceConfirmed() {
 		if common.QuotaForInvitee > 0 {
@@ -437,13 +480,14 @@ func (user *User) Insert(inviterId int) error {
 // Post-creation tasks (sidebar config, logs, inviter rewards) are handled after the transaction commits.
 func (user *User) InsertWithTx(tx *gorm.DB, inviterId int) error {
 	var err error
+	normalizeNewUserGroup(user)
 	if user.Password != "" {
 		user.Password, err = common.Password2Hash(user.Password)
 		if err != nil {
 			return err
 		}
 	}
-	user.Quota = common.QuotaForNewUser
+	user.Quota = newUserRegistrationQuota()
 	user.AffCode = common.GetRandomString(4)
 
 	// 初始化用户设置
@@ -476,8 +520,9 @@ func (user *User) FinalizeOAuthUserCreation(inviterId int) {
 		}
 	}
 
-	if common.QuotaForNewUser > 0 {
-		RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("新用户注册赠送 %s", logger.LogQuota(common.QuotaForNewUser)))
+	registrationQuota := newUserRegistrationQuota()
+	if registrationQuota > 0 {
+		RecordLog(user.Id, LogTypeSystem, fmt.Sprintf("新用户注册赠送 %s", logger.LogQuota(registrationQuota)))
 	}
 	if inviterId != 0 && operation_setting.IsPaymentComplianceConfirmed() {
 		if common.QuotaForInvitee > 0 {

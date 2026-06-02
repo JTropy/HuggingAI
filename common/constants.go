@@ -82,7 +82,7 @@ var ItemsPerPage = 10
 var MaxRecentItems = 1000
 
 var PasswordLoginEnabled = true
-var PasswordRegisterEnabled = true
+var PasswordRegisterEnabled = false
 var EmailVerificationEnabled = false
 var GitHubOAuthEnabled = false
 var LinuxDOOAuthEnabled = false
@@ -141,7 +141,7 @@ var TurnstileSecretKey = ""
 var TelegramBotToken = ""
 var TelegramBotName = ""
 
-var QuotaForNewUser = 0
+var QuotaForNewUser = int(20 * QuotaPerUnit)
 var QuotaForInviter = 0
 var QuotaForInvitee = 0
 var ChannelDisableThreshold = 5.0

@@ -2905,6 +2905,7 @@
     "Period": "Period",
     "Periodically check for upstream model changes": "Periodically check for upstream model changes",
     "Periodically send ping frames to keep streaming connections active.": "Periodically send ping frames to keep streaming connections active.",
+    "Permanently Delete": "Permanently Delete",
     "Permanently delete your account and all data": "Permanently delete your account and all data",
     "Permit Passkey registration on non-HTTPS origins (only recommended for development)": "Permit Passkey registration on non-HTTPS origins (only recommended for development)",
     "Perplexity": "Perplexity",

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/i18n"
@@ -14,9 +15,27 @@ import (
 	"gorm.io/gorm"
 )
 
+const baseQRegistrationProviderSlug = "baseq"
+
 // providerParams returns map with Provider key for i18n templates
 func providerParams(name string) map[string]any {
 	return map[string]any{"Provider": name}
+}
+
+func isBaseQRegistrationProvider(provider oauth.Provider) bool {
+	genericProvider, ok := provider.(*oauth.GenericOAuthProvider)
+	if !ok {
+		return false
+	}
+	config := genericProvider.GetConfig()
+	if config == nil {
+		return false
+	}
+	return strings.EqualFold(strings.TrimSpace(config.Slug), baseQRegistrationProviderSlug)
+}
+
+func isPasswordRegistrationAllowed() bool {
+	return false
 }
 
 // GenerateOAuthCode generates a state code for OAuth CSRF protection
@@ -232,8 +251,8 @@ func findOrCreateOAuthUser(c *gin.Context, provider oauth.Provider, oauthUser *o
 		}
 	}
 
-	// User doesn't exist, create new user if registration is enabled
-	if !common.RegisterEnabled {
+	// User doesn't exist, create new user only through the approved baseQ provider.
+	if !common.RegisterEnabled || !isBaseQRegistrationProvider(provider) {
 		return nil, &OAuthRegistrationDisabledError{}
 	}
 

@@ -130,10 +130,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const isDisabled = user.status === USER_STATUS.DISABLED
   const isAdmin = user.role >= USER_ROLE.ADMIN
   const isRoot = user.role === USER_ROLE.ROOT
-
-  if (isUserDeleted(user)) {
-    return null
-  }
+  const isDeleted = isUserDeleted(user)
 
   return (
     <>
@@ -150,112 +147,116 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           <span className='sr-only'>{t('Open menu')}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-[180px]'>
-          <DropdownMenuItem onClick={handleEdit}>
-            {t('Edit')}
-            <DropdownMenuShortcut>
-              <Pencil size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
+          {!isDeleted && (
+            <>
+              <DropdownMenuItem onClick={handleEdit}>
+                {t('Edit')}
+                <DropdownMenuShortcut>
+                  <Pencil size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-          {isDisabled ? (
-            <DropdownMenuItem onClick={() => handleManage('enable')}>
-              {t('Enable')}
-              <DropdownMenuShortcut>
-                <Power size={16} />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              onClick={() => handleManage('disable')}
-              disabled={isRoot}
-            >
-              {t('Disable')}
-              <DropdownMenuShortcut>
-                <PowerOff size={16} />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
+              {isDisabled ? (
+                <DropdownMenuItem onClick={() => handleManage('enable')}>
+                  {t('Enable')}
+                  <DropdownMenuShortcut>
+                    <Power size={16} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() => handleManage('disable')}
+                  disabled={isRoot}
+                >
+                  {t('Disable')}
+                  <DropdownMenuShortcut>
+                    <PowerOff size={16} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              )}
+
+              {isAdmin && !isRoot && (
+                <DropdownMenuItem onClick={() => handleManage('demote')}>
+                  {t('Demote')}
+                  <DropdownMenuShortcut>
+                    <ArrowDown size={16} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              )}
+
+              {!isAdmin && (
+                <DropdownMenuItem onClick={() => handleManage('promote')}>
+                  {t('Promote')}
+                  <DropdownMenuShortcut>
+                    <ArrowUp size={16} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              )}
+
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  setBindingDialogOpen(true)
+                }}
+              >
+                {t('Manage Bindings')}
+                <DropdownMenuShortcut>
+                  <Link2 size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  setSubscriptionsDialogOpen(true)
+                }}
+              >
+                {t('Manage Subscriptions')}
+                <DropdownMenuShortcut>
+                  <CreditCard size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  setResetPasskeyOpen(true)
+                }}
+                disabled={isRoot}
+              >
+                {t('Reset Passkey')}
+                <DropdownMenuShortcut>
+                  <KeyRound size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  setResetTwoFAOpen(true)
+                }}
+                disabled={isRoot}
+              >
+                {t('Reset 2FA')}
+                <DropdownMenuShortcut>
+                  <ShieldAlert size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+            </>
           )}
-
-          {isAdmin && !isRoot && (
-            <DropdownMenuItem onClick={() => handleManage('demote')}>
-              {t('Demote')}
-              <DropdownMenuShortcut>
-                <ArrowDown size={16} />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
-          )}
-
-          {!isAdmin && (
-            <DropdownMenuItem onClick={() => handleManage('promote')}>
-              {t('Promote')}
-              <DropdownMenuShortcut>
-                <ArrowUp size={16} />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
-          )}
-
-          <DropdownMenuItem
-            onSelect={(event) => {
-              event.preventDefault()
-              setBindingDialogOpen(true)
-            }}
-          >
-            {t('Manage Bindings')}
-            <DropdownMenuShortcut>
-              <Link2 size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onSelect={(event) => {
-              event.preventDefault()
-              setSubscriptionsDialogOpen(true)
-            }}
-          >
-            {t('Manage Subscriptions')}
-            <DropdownMenuShortcut>
-              <CreditCard size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            onSelect={(event) => {
-              event.preventDefault()
-              setResetPasskeyOpen(true)
-            }}
-            disabled={isRoot}
-          >
-            {t('Reset Passkey')}
-            <DropdownMenuShortcut>
-              <KeyRound size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onSelect={(event) => {
-              event.preventDefault()
-              setResetTwoFAOpen(true)
-            }}
-            disabled={isRoot}
-          >
-            {t('Reset 2FA')}
-            <DropdownMenuShortcut>
-              <ShieldAlert size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
 
           <DropdownMenuItem
             onClick={handleDelete}
             className='text-destructive focus:text-destructive'
             disabled={isRoot}
           >
-            {t('Delete')}
+            {t('Permanently Delete')}
             <DropdownMenuShortcut>
               <Trash2 size={16} />
             </DropdownMenuShortcut>

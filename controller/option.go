@@ -245,6 +245,17 @@ func UpdateOption(c *gin.Context) {
 			return
 		}
 		option.Value = normalized
+	case "UserUsableGroups":
+		normalized, normalizeErr := setting.NormalizeUserUsableGroupsJSONString(option.Value.(string))
+		err = normalizeErr
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		option.Value = normalized
 	case "ImageRatio":
 		err = ratio_setting.UpdateImageRatioByJSONString(option.Value.(string))
 		if err != nil {

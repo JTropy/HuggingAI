@@ -34,7 +34,13 @@ func GetUserGroups(c *gin.Context) {
 		userGroup, _ = model.GetUserGroup(userId, false)
 	}
 	userUsableGroups := service.GetUserUsableGroups(userGroup)
-	for groupName, _ := range ratio_setting.GetGroupRatioCopy() {
+	candidateGroups := ratio_setting.GetGroupRatioCopy()
+	for groupName := range userUsableGroups {
+		if _, ok := candidateGroups[groupName]; !ok {
+			candidateGroups[groupName] = service.GetUserGroupRatio(userGroup, groupName)
+		}
+	}
+	for groupName := range candidateGroups {
 		if !service.CanSetTokenGroup(role, userGroup, groupName) {
 			continue
 		}

@@ -29,7 +29,7 @@ import {
   showSuccess,
   updateAPI,
   getSystemName,
-  getOAuthProviderIcon,
+  getCustomOAuthProviderIcon,
   setUserData,
   onGitHubOAuthClicked,
   onDiscordOAuthClicked,
@@ -610,7 +610,7 @@ const LoginForm = () => {
                       theme='outline'
                       className='w-full h-12 flex items-center justify-center !rounded-full border border-gray-200 hover:bg-gray-50 transition-colors'
                       type='tertiary'
-                      icon={getOAuthProviderIcon(provider.icon || '', 20)}
+                      icon={getCustomOAuthProviderIcon(provider, 20)}
                       onClick={() => handleCustomOAuthClick(provider)}
                       loading={customOAuthLoading[provider.slug]}
                     >
@@ -958,8 +958,7 @@ const LoginForm = () => {
         style={{ top: '50%', left: '-120px' }}
       />
       <div className='w-full max-w-sm mt-[60px]'>
-        {showEmailLogin ||
-        !hasOAuthLoginOptions
+        {showEmailLogin || !hasOAuthLoginOptions
           ? renderEmailLoginForm()
           : renderOAuthOptions()}
         {renderWeChatLoginModal()}

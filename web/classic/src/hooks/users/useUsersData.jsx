@@ -125,10 +125,13 @@ export const useUsersData = () => {
     // Trigger loading state to force table re-render
     setLoading(true);
 
-    const res = await API.post('/api/user/manage', {
-      id: userId,
-      action,
-    });
+    const res =
+      action === 'delete'
+        ? await API.delete(`/api/user/${userId}/`)
+        : await API.post('/api/user/manage', {
+            id: userId,
+            action,
+          });
 
     const { success, message } = res.data;
     if (success) {
@@ -136,15 +139,17 @@ export const useUsersData = () => {
       const user = res.data.data;
 
       // Create a new array and new object to ensure React detects changes
-      const newUsers = users.map((u) => {
-        if (u.id === userId) {
-          if (action === 'delete') {
-            return { ...u, DeletedAt: new Date() };
+      const newUsers = users
+        .map((u) => {
+          if (u.id === userId) {
+            if (action === 'delete') {
+              return null;
+            }
+            return { ...u, status: user.status, role: user.role };
           }
-          return { ...u, status: user.status, role: user.role };
-        }
-        return u;
-      });
+          return u;
+        })
+        .filter(Boolean);
 
       setUsers(newUsers);
     } else {

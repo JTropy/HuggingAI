@@ -1,15 +1,15 @@
 package setting
 
 import (
-	"encoding/json"
 	"sync"
 
 	"github.com/QuantumNous/new-api/common"
 )
 
+// userUsableGroups stores group descriptions and the default public group list.
+// service.GetUserUsableGroups applies per-user permission rules on top of it.
 var userUsableGroups = map[string]string{
 	"default": "默认分组",
-	"vip":     "vip分组",
 }
 var userUsableGroupsMutex sync.RWMutex
 
@@ -28,19 +28,47 @@ func UserUsableGroups2JSONString() string {
 	userUsableGroupsMutex.RLock()
 	defer userUsableGroupsMutex.RUnlock()
 
-	jsonBytes, err := json.Marshal(userUsableGroups)
+	jsonBytes, err := common.Marshal(userUsableGroups)
 	if err != nil {
 		common.SysLog("error marshalling user groups: " + err.Error())
 	}
 	return string(jsonBytes)
 }
 
+func ParseUserUsableGroupsJSONString(jsonStr string) (map[string]string, error) {
+	nextUserUsableGroups := make(map[string]string)
+	if err := common.UnmarshalJsonStr(jsonStr, &nextUserUsableGroups); err != nil {
+		return nil, err
+	}
+	if nextUserUsableGroups == nil {
+		nextUserUsableGroups = make(map[string]string)
+	}
+	return nextUserUsableGroups, nil
+}
+
+func NormalizeUserUsableGroupsJSONString(jsonStr string) (string, error) {
+	nextUserUsableGroups, err := ParseUserUsableGroupsJSONString(jsonStr)
+	if err != nil {
+		return "", err
+	}
+	jsonBytes, err := common.Marshal(nextUserUsableGroups)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonBytes), nil
+}
+
 func UpdateUserUsableGroupsByJSONString(jsonStr string) error {
+	nextUserUsableGroups, err := ParseUserUsableGroupsJSONString(jsonStr)
+	if err != nil {
+		return err
+	}
+
 	userUsableGroupsMutex.Lock()
 	defer userUsableGroupsMutex.Unlock()
 
-	userUsableGroups = make(map[string]string)
-	return json.Unmarshal([]byte(jsonStr), &userUsableGroups)
+	userUsableGroups = nextUserUsableGroups
+	return nil
 }
 
 func GetUsableGroupDescription(groupName string) string {

@@ -65,6 +65,30 @@ import {
 
 const { Text } = Typography;
 
+const providerItems = [
+  { name: 'Moonshot', render: () => <Moonshot size={40} /> },
+  { name: 'OpenAI', render: () => <OpenAI size={40} /> },
+  { name: 'xAI', render: () => <XAI size={40} /> },
+  { name: 'Zhipu', render: () => <Zhipu.Color size={40} /> },
+  { name: 'Volcengine', render: () => <Volcengine.Color size={40} /> },
+  { name: 'Cohere', render: () => <Cohere.Color size={40} /> },
+  { name: 'Claude', render: () => <Claude.Color size={40} /> },
+  { name: 'Gemini', render: () => <Gemini.Color size={40} /> },
+  { name: 'Suno', render: () => <Suno size={40} /> },
+  { name: 'Minimax', render: () => <Minimax.Color size={40} /> },
+  { name: 'Wenxin', render: () => <Wenxin.Color size={40} /> },
+  { name: 'Spark', render: () => <Spark.Color size={40} /> },
+  { name: 'Qingyan', render: () => <Qingyan.Color size={40} /> },
+  { name: 'DeepSeek', render: () => <DeepSeek.Color size={40} /> },
+  { name: 'Qwen', render: () => <Qwen.Color size={40} /> },
+  { name: 'Midjourney', render: () => <Midjourney size={40} /> },
+  { name: 'Grok', render: () => <Grok size={40} /> },
+  { name: 'Azure AI', render: () => <AzureAI.Color size={40} /> },
+  { name: 'Hunyuan', render: () => <Hunyuan.Color size={40} /> },
+  { name: 'Xinference', render: () => <Xinference.Color size={40} /> },
+  { name: '30+', isCount: true },
+];
+
 const Home = () => {
   const { t, i18n } = useTranslation();
   const [statusState] = useContext(StatusContext);
@@ -156,37 +180,38 @@ const Home = () => {
         isMobile={isMobile}
       />
       {homePageContentLoaded && homePageContent === '' ? (
-        <div className='w-full overflow-x-hidden'>
-          {/* Banner 部分 */}
-          <div className='w-full border-b border-semi-color-border min-h-[500px] md:min-h-[600px] lg:min-h-[700px] relative overflow-x-hidden'>
-            {/* 背景模糊晕染球 */}
-            <div className='blur-ball blur-ball-indigo' />
-            <div className='blur-ball blur-ball-teal' />
-            <div className='flex items-center justify-center h-full px-4 py-20 md:py-24 lg:py-32 mt-10'>
-              {/* 居中内容区 */}
-              <div className='flex flex-col items-center justify-center text-center max-w-4xl mx-auto'>
-                <div className='flex flex-col items-center justify-center mb-6 md:mb-8'>
-                  <h1
-                    className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-semi-color-text-0 leading-tight ${isChinese ? 'tracking-wide md:tracking-wider' : ''}`}
-                  >
-                    <>
-                      {t('统一的')}
-                      <br />
-                      <span className='shine-text'>{t('大模型接口网关')}</span>
-                    </>
-                  </h1>
-                  <p className='text-base md:text-lg lg:text-xl text-semi-color-text-1 mt-4 md:mt-6 max-w-xl'>
-                    {t('多模型统一接入，只需将基址替换为：')}
-                  </p>
-                  {/* BASE URL 与端点选择 */}
-                  <div className='flex flex-col md:flex-row items-center justify-center gap-4 w-full mt-4 md:mt-6 max-w-md'>
-                    <Input
-                      readonly
-                      value={serverAddress}
-                      className='flex-1 !rounded-full'
-                      size={isMobile ? 'default' : 'large'}
-                      suffix={
-                        <div className='flex items-center gap-2'>
+        <div className='home-default-page w-full overflow-hidden'>
+          <section className='home-hero-stage'>
+            <div className='home-ambient-layer' aria-hidden='true'>
+              <div className='home-grid-plane' />
+              <div className='home-data-ribbon home-data-ribbon-a' />
+              <div className='home-data-ribbon home-data-ribbon-b' />
+              <div className='home-scanline' />
+            </div>
+
+            <div className='home-hero-inner'>
+              <div className='home-hero-main'>
+                <h1
+                  className={`home-hero-title ${isChinese ? 'home-hero-title-cn' : ''}`}
+                >
+                  <span>{t('统一的')}</span>
+                  <span className='home-title-accent'>
+                    {t('大模型接口网关')}
+                  </span>
+                </h1>
+                <p className='home-hero-subtitle'>
+                  {t('多模型统一接入，只需将基址替换为：')}
+                </p>
+
+                <div className='home-endpoint-console'>
+                  <Input
+                    readOnly
+                    value={serverAddress}
+                    className='home-endpoint-input'
+                    size={isMobile ? 'default' : 'large'}
+                    suffix={
+                      <div className='home-endpoint-suffix'>
+                        <div className='home-endpoint-picker'>
                           <ScrollList
                             bodyHeight={32}
                             style={{ border: 'unset', boxShadow: 'unset' }}
@@ -199,26 +224,25 @@ const Home = () => {
                               onSelect={({ index }) => setEndpointIndex(index)}
                             />
                           </ScrollList>
-                          <Button
-                            type='primary'
-                            onClick={handleCopyBaseURL}
-                            icon={<IconCopy />}
-                            className='!rounded-full'
-                          />
                         </div>
-                      }
-                    />
-                  </div>
+                        <Button
+                          type='primary'
+                          onClick={handleCopyBaseURL}
+                          icon={<IconCopy />}
+                          className='home-copy-button'
+                        />
+                      </div>
+                    }
+                  />
                 </div>
 
-                {/* 操作按钮 */}
-                <div className='flex flex-row gap-4 justify-center items-center'>
-                  <Link to='/console'>
+                <div className='home-actions'>
+                  <Link to='/console' className='home-action-link'>
                     <Button
                       theme='solid'
                       type='primary'
                       size={isMobile ? 'default' : 'large'}
-                      className='!rounded-3xl px-8 py-2'
+                      className='home-primary-action'
                       icon={<IconPlay />}
                     >
                       {t('获取密钥')}
@@ -227,7 +251,7 @@ const Home = () => {
                   {isDemoSiteMode && statusState?.status?.version ? (
                     <Button
                       size={isMobile ? 'default' : 'large'}
-                      className='flex items-center !rounded-3xl px-6 py-2'
+                      className='home-secondary-action'
                       icon={<IconGithubLogo />}
                       onClick={() =>
                         window.open(
@@ -242,7 +266,7 @@ const Home = () => {
                     docsLink && (
                       <Button
                         size={isMobile ? 'default' : 'large'}
-                        className='flex items-center !rounded-3xl px-6 py-2'
+                        className='home-secondary-action'
                         icon={<IconFile />}
                         onClick={() => window.open(docsLink, '_blank')}
                       >
@@ -251,88 +275,32 @@ const Home = () => {
                     )
                   )}
                 </div>
+              </div>
 
-                {/* 框架兼容性图标 */}
-                <div className='mt-12 md:mt-16 lg:mt-20 w-full'>
-                  <div className='flex items-center mb-6 md:mb-8 justify-center'>
-                    <Text
-                      type='tertiary'
-                      className='text-lg md:text-xl lg:text-2xl font-light'
+              <div className='home-provider-strip'>
+                <Text type='tertiary' className='home-provider-label'>
+                  {t('支持众多的大模型供应商')}
+                </Text>
+                <div className='home-provider-grid'>
+                  {providerItems.map((item) => (
+                    <div
+                      key={item.name}
+                      className={`home-provider-logo ${item.isCount ? 'home-provider-count' : ''}`}
+                      title={item.name}
                     >
-                      {t('支持众多的大模型供应商')}
-                    </Text>
-                  </div>
-                  <div className='flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 max-w-5xl mx-auto px-4'>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Moonshot size={40} />
+                      {item.isCount ? (
+                        <Typography.Text className='home-provider-count-text'>
+                          30+
+                        </Typography.Text>
+                      ) : (
+                        item.render()
+                      )}
                     </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <OpenAI size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <XAI size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Zhipu.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Volcengine.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Cohere.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Claude.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Gemini.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Suno size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Minimax.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Wenxin.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Spark.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Qingyan.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <DeepSeek.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Qwen.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Midjourney size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Grok size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <AzureAI.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Hunyuan.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Xinference.Color size={40} />
-                    </div>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center'>
-                      <Typography.Text className='!text-lg sm:!text-xl md:!text-2xl lg:!text-3xl font-bold'>
-                        30+
-                      </Typography.Text>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       ) : (
         <div className='overflow-x-hidden w-full'>

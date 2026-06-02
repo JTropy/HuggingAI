@@ -22,12 +22,13 @@ import {
   IconDiscord,
   IconGithub,
   IconLinuxDo,
+  IconQQ,
   IconWeChat,
 } from '@/assets/brand-icons'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useOAuthLogin } from '../hooks/use-oauth-login'
-import type { SystemStatus } from '../types'
+import type { CustomOAuthProviderInfo, SystemStatus } from '../types'
 
 type OAuthProvidersProps = {
   status: SystemStatus | null
@@ -43,6 +44,20 @@ type ProviderButton = {
   onClick: () => void
   icon?: ReactNode
   disabled?: boolean
+}
+
+function normalizeProviderIdentity(value: unknown) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+}
+
+function isBaseQProvider(provider: CustomOAuthProviderInfo) {
+  return [provider.slug, provider.name, provider.icon].some((value) =>
+    ['baseq', 'qq', 'tencentqq'].some((keyword) =>
+      normalizeProviderIdentity(value).includes(keyword)
+    )
+  )
 }
 
 export function OAuthProviders({
@@ -129,6 +144,9 @@ export function OAuthProviders({
         key: `custom-${provider.slug}`,
         label: t('Continue with {{name}}', { name: provider.name }),
         onClick: () => handleCustomOAuthLogin(provider),
+        icon: isBaseQProvider(provider) ? (
+          <IconQQ className='h-4 w-4' />
+        ) : undefined,
       })
     }
   }

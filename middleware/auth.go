@@ -388,7 +388,7 @@ func TokenAuth() func(c *gin.Context) {
 				return
 			}
 			if !ratio_setting.ContainsGroupRatio(tokenGroup) {
-				if tokenGroup != "auto" {
+				if tokenGroup != "auto" && strings.TrimSpace(tokenGroup) != strings.TrimSpace(userGroup) {
 					abortWithOpenAiMessage(c, http.StatusForbidden, fmt.Sprintf("分组 %s 已被弃用", tokenGroup))
 					return
 				}
