@@ -27,6 +27,7 @@ import {
   loadChannelModels,
   copy,
   toBoolean,
+  getDisplayGroupName,
 } from '../../helpers';
 import {
   CHANNEL_OPTIONS,
@@ -564,7 +565,7 @@ export const useChannelsData = () => {
       if (res === undefined) return;
       setGroupOptions(
         res.data.data.map((group) => ({
-          label: group,
+          label: getDisplayGroupName(group),
           value: group,
         })),
       );

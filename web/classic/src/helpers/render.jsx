@@ -108,6 +108,18 @@ import {
 import { FaQq } from 'react-icons/fa';
 import { FaLinkedin } from 'react-icons/fa';
 
+const GROUP_DISPLAY_NAMES = {
+  default: 'basic',
+  vip: 'plus',
+  svip: 'pro',
+};
+
+export function getDisplayGroupName(group) {
+  const groupName = String(group || '').trim();
+  if (!groupName) return '';
+  return GROUP_DISPLAY_NAMES[groupName] || groupName;
+}
+
 // 获取侧边栏Lucide图标组件
 export function getLucideIcon(key, selected = false) {
   const size = 16;
@@ -843,7 +855,7 @@ export function renderGroup(group) {
             }
           }}
         >
-          {group}
+          {getDisplayGroupName(group)}
         </Tag>
       ))}
     </span>

@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React from 'react';
+import { getDisplayGroupName } from '../../../../helpers';
 import SelectableButtonGroup from '../../../common/ui/SelectableButtonGroup';
 
 /**
@@ -63,7 +64,7 @@ const PricingGroups = ({
     }
     return {
       value: g,
-      label: g === 'all' ? t('全部分组') : g,
+      label: g === 'all' ? t('全部分组') : getDisplayGroupName(g),
       tagCount: ratioDisplay,
     };
   });

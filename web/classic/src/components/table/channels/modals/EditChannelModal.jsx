@@ -25,6 +25,7 @@ import {
   showInfo,
   showSuccess,
   verifyJSON,
+  getDisplayGroupName,
 } from '../../../../helpers';
 import { useIsMobile } from '../../../../hooks/common/useIsMobile';
 import { CHANNEL_OPTIONS, MODEL_FETCHABLE_CHANNEL_TYPES } from '../../../../constants';
@@ -1180,7 +1181,7 @@ const EditChannelModal = (props) => {
       }
       setGroupOptions(
         res.data.data.map((group) => ({
-          label: group,
+          label: getDisplayGroupName(group),
           value: group,
         })),
       );

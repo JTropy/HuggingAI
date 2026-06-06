@@ -26,6 +26,16 @@ import {
 import axios from 'axios';
 import { MESSAGE_ROLES } from '../constants/playground.constants';
 
+const getDisplayGroupName = (group) => {
+  const groupName = String(group || '').trim();
+  const displayNames = {
+    default: 'basic',
+    vip: 'plus',
+    svip: 'pro',
+  };
+  return displayNames[groupName] || groupName;
+};
+
 export let API = axios.create({
   baseURL: import.meta.env.VITE_REACT_APP_SERVER_URL
     ? import.meta.env.VITE_REACT_APP_SERVER_URL
@@ -210,8 +220,7 @@ export const processModelsData = (data, currentModel) => {
 // 处理分组数据
 export const processGroupsData = (data, userGroup) => {
   let groupOptions = Object.entries(data).map(([group, info]) => ({
-    label:
-      info.desc.length > 20 ? info.desc.substring(0, 20) + '...' : info.desc,
+    label: getDisplayGroupName(group),
     value: group,
     ratio: info.ratio,
     fullLabel: info.desc,

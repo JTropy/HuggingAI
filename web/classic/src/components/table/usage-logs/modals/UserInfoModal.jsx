@@ -19,7 +19,11 @@ For commercial licensing, please contact support@quantumnous.com
 
 import React from 'react';
 import { Modal, Badge } from '@douyinfe/semi-ui';
-import { renderQuota, renderNumber } from '../../../../helpers';
+import {
+  renderQuota,
+  renderNumber,
+  getDisplayGroupName,
+} from '../../../../helpers';
 
 const UserInfoModal = ({
   showUserInfo,
@@ -117,7 +121,9 @@ const UserInfoModal = ({
             {userInfoData.group && (
               <div style={colStyle}>
                 {renderLabel(t('用户组'), 'tertiary')}
-                <div style={valueStyle}>{userInfoData.group}</div>
+                <div style={valueStyle}>
+                  {getDisplayGroupName(userInfoData.group)}
+                </div>
               </div>
             )}
           </div>

@@ -26,6 +26,7 @@ import {
   showWarning,
   verifyJSON,
   selectFilter,
+  getDisplayGroupName,
 } from '../../../../helpers';
 import {
   SideSheet,
@@ -186,7 +187,7 @@ const EditTagModal = (props) => {
       }
       setGroupOptions(
         res.data.data.map((group) => ({
-          label: group,
+          label: getDisplayGroupName(group),
           value: group,
         })),
       );

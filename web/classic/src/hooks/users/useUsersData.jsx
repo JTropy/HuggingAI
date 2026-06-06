@@ -19,7 +19,12 @@ For commercial licensing, please contact support@quantumnous.com
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { API, showError, showSuccess } from '../../helpers';
+import {
+  API,
+  showError,
+  showSuccess,
+  getDisplayGroupName,
+} from '../../helpers';
 import { ITEMS_PER_PAGE } from '../../constants';
 import { useTableCompactMode } from '../common/useTableCompactMode';
 
@@ -248,7 +253,7 @@ export const useUsersData = () => {
       }
       setGroupOptions(
         res.data.data.map((group) => ({
-          label: group,
+          label: getDisplayGroupName(group),
           value: group,
         })),
       );

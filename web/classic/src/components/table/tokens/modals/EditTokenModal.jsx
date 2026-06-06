@@ -28,6 +28,7 @@ import {
   getModelCategories,
   selectFilter,
   isRoot,
+  getDisplayGroupName,
 } from '../../../../helpers';
 import {
   quotaToDisplayAmount,
@@ -140,9 +141,10 @@ const EditTokenModal = (props) => {
     const { success, message, data } = res.data;
     if (success) {
       let localGroupOptions = Object.entries(data).map(([group, info]) => ({
-        label: info.desc,
+        label: getDisplayGroupName(group),
         value: group,
         ratio: info.ratio,
+        fullLabel: info.desc,
       }));
       if (statusState?.status?.default_use_auto_group) {
         if (localGroupOptions.some((group) => group.value === 'auto')) {
@@ -260,7 +262,11 @@ const EditTokenModal = (props) => {
           ? customKey.slice(3)
           : customKey;
         if (!/^[A-Za-z0-9_]{1,128}$/.test(normalizedKey)) {
-          showError(t('自定义 API 密钥只能包含字母、数字和下划线，长度 1-128，sk- 前缀可选'));
+          showError(
+            t(
+              '自定义 API 密钥只能包含字母、数字和下划线，长度 1-128，sk- 前缀可选',
+            ),
+          );
           setLoading(false);
           return;
         }
@@ -407,9 +413,7 @@ const EditTokenModal = (props) => {
                         field='key'
                         label={t('自定义 API 密钥')}
                         placeholder={t('留空则自动生成')}
-                        extraText={t(
-                          '可使用字母、数字或下划线，sk- 前缀可选',
-                        )}
+                        extraText={t('可使用字母、数字或下划线，sk- 前缀可选')}
                         showClear
                       />
                     </Col>
@@ -584,7 +588,10 @@ const EditTokenModal = (props) => {
                         ? `▾ ${t('收起原生额度输入')}`
                         : `▸ ${t('使用原生额度输入')}`}
                     </div>
-                    <div style={{ display: showQuotaInput ? 'block' : 'none' }} className='mt-2'>
+                    <div
+                      style={{ display: showQuotaInput ? 'block' : 'none' }}
+                      className='mt-2'
+                    >
                       <Form.InputNumber
                         field='remain_quota'
                         label={t('额度')}

@@ -39,7 +39,12 @@ import {
   IconSave,
 } from '@douyinfe/semi-icons';
 import { Clock, RefreshCw } from 'lucide-react';
-import { API, showError, showSuccess } from '../../../../helpers';
+import {
+  API,
+  showError,
+  showSuccess,
+  getDisplayGroupName,
+} from '../../../../helpers';
 import {
   quotaToDisplayAmount,
   displayAmountToQuota,
@@ -336,7 +341,7 @@ const AddEditSubscriptionModal = ({
                         <Select.Option value=''>{t('不升级')}</Select.Option>
                         {(groupOptions || []).map((g) => (
                           <Select.Option key={g} value={g}>
-                            {g}
+                            {getDisplayGroupName(g)}
                           </Select.Option>
                         ))}
                       </Form.Select>
