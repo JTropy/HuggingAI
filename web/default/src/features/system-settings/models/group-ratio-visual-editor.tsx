@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useState, useMemo, useEffect, useCallback, memo } from 'react'
 import { Pencil, Plus, Trash2, GripVertical, ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { normalizeGroupRatio } from '@/lib/group-ratio'
 import { Button } from '@/components/ui/button'
 import {
@@ -96,7 +97,10 @@ function normalizeRatio(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 1
 }
 
-function normalizeEditableGroupRatio(groupName: string, value: unknown): number {
+function normalizeEditableGroupRatio(
+  groupName: string,
+  value: unknown
+): number {
   return normalizeGroupRatio(groupName, normalizeRatio(value))
 }
 
@@ -638,7 +642,9 @@ export const GroupRatioVisualEditor = memo(function GroupRatioVisualEditor({
                     className='flex items-center gap-2 rounded-md border p-3'
                   >
                     <GripVertical className='text-muted-foreground h-4 w-4' />
-                    <span className='flex-1 font-medium'>{group}</span>
+                    <span className='flex-1 font-medium'>
+                      {getDisplayGroupName(group)}
+                    </span>
                     <div className='flex gap-1'>
                       <Button
                         variant='ghost'

@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { BundledLanguage } from 'shiki/bundle/web'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { cn } from '@/lib/utils'
 import { useStatus } from '@/hooks/use-status'
 import { Badge } from '@/components/ui/badge'
@@ -684,7 +685,9 @@ function RateLimitsSection(props: { model: PricingModel }) {
           <TableBody>
             {limits.map((l) => (
               <TableRow key={l.group} className='hover:bg-muted/20'>
-                <TableCell className='py-2 font-mono'>{l.group}</TableCell>
+                <TableCell className='py-2 font-mono'>
+                  {getDisplayGroupName(l.group)}
+                </TableCell>
                 <TableCell className='py-2 text-right font-mono'>
                   {formatRateLimit(l.rpm)}
                 </TableCell>

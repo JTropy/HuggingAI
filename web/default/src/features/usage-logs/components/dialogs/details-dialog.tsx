@@ -32,6 +32,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { formatBillingCurrencyFromUSD } from '@/lib/currency'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { formatLogQuota, formatTokens, formatUseTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
@@ -560,7 +561,7 @@ export function DetailsDialog(props: DetailsDialogProps) {
               {(props.log.group || other?.group) && (
                 <DetailRow
                   label={t('Group')}
-                  value={props.log.group || other?.group || ''}
+                  value={getDisplayGroupName(props.log.group || other?.group)}
                   mono
                 />
               )}

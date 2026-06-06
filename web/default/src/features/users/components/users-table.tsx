@@ -33,6 +33,7 @@ import {
 import { useMediaQuery } from '@/hooks'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { getCanonicalGroupName } from '@/lib/display-group'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import {
   DISABLED_ROW_DESKTOP,
@@ -127,7 +128,7 @@ export function UsersTable() {
               keyword: globalFilter,
               status: statusValue,
               role: roleValue,
-              group: groupFilter,
+              group: getCanonicalGroupName(groupFilter),
             })
           : await getUsers(params)
 

@@ -48,6 +48,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { getLobeIcon } from '@/lib/lobe-icon'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { useHiddenClickUnlock } from '@/hooks/use-hidden-click-unlock'
@@ -430,7 +431,7 @@ export function ChannelMutateDrawer({
     const allGroups = new Set([...groupsData.data, ...(currentGroups || [])])
     return Array.from(allGroups).map((group) => ({
       value: group,
-      label: group,
+      label: getDisplayGroupName(group),
     }))
   }, [groupsData, currentGroups])
 

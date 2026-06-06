@@ -31,6 +31,7 @@ import {
 } from '@tanstack/react-table'
 import { useDebounce, useMediaQuery } from '@/hooks'
 import { useTranslation } from 'react-i18next'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { getLobeIcon } from '@/lib/lobe-icon'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Input } from '@/components/ui/input'
@@ -191,7 +192,7 @@ export function ChannelsTable() {
   const groupOptions = useMemo(
     () =>
       (groupsData?.data || []).map((g) => ({
-        label: g,
+        label: getDisplayGroupName(g),
         value: g,
       })),
     [groupsData]

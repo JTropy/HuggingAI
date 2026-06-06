@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { normalizeGroupRatio } from '@/lib/group-ratio'
 import { cn } from '@/lib/utils'
 import { StatusBadge, type StatusBadgeProps } from './status-badge'
@@ -50,7 +51,7 @@ function getGroupLabel(params: {
   if (params.labelOverride) return params.labelOverride
   if (params.isEmptyGroup) return params.t('User Group')
   if (params.isAutoGroup) return params.t('Auto')
-  return params.groupName ?? ''
+  return getDisplayGroupName(params.groupName)
 }
 
 export function GroupBadge(props: GroupBadgeProps) {

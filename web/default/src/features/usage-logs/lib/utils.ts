@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 /**
  * Utility functions for usage logs feature
  */
+import { getCanonicalGroupName } from '@/lib/display-group'
 import {
   getAllLogs,
   getUserLogs,
@@ -202,7 +203,9 @@ export function buildApiParams(config: {
     ...(searchParams.type ? { type: processType(searchParams.type) } : {}),
     ...(searchParams.model ? { model_name: String(searchParams.model) } : {}),
     ...(searchParams.token ? { token_name: String(searchParams.token) } : {}),
-    ...(searchParams.group ? { group: String(searchParams.group) } : {}),
+    ...(searchParams.group
+      ? { group: getCanonicalGroupName(String(searchParams.group)) }
+      : {}),
     ...(isAdmin && searchParams.channel
       ? { channel: Number(searchParams.channel) || 0 }
       : {}),
@@ -234,7 +237,7 @@ export function buildApiParams(config: {
           params.token_name = String(value)
           break
         case 'group':
-          params.group = String(value)
+          params.group = getCanonicalGroupName(String(value))
           break
         case 'channel':
           if (isAdmin) params.channel = Number(value) || 0

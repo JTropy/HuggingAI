@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
 import { getUserModels, getUserGroups } from '@/lib/api'
 import { getCurrencyDisplay, getCurrencyLabel } from '@/lib/currency'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { normalizeGroupRatio } from '@/lib/group-ratio'
 import { ROLE } from '@/lib/roles'
 import { cn } from '@/lib/utils'
@@ -125,7 +126,7 @@ export function ApiKeysMutateDrawer({
   const groups: ApiKeyGroupOption[] = Object.entries(groupsRaw).map(
     ([key, info]) => ({
       value: key,
-      label: key,
+      label: getDisplayGroupName(key),
       desc: info.desc || key,
       ratio: normalizeGroupRatio(key, info.ratio),
     })

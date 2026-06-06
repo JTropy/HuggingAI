@@ -22,6 +22,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { CalendarClock, CreditCard, RefreshCw, Settings2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -368,7 +369,10 @@ export function SubscriptionsMutateDrawer({
                       <Select
                         items={[
                           { value: '__none__', label: t('No Upgrade') },
-                          ...groupOptions.map((g) => ({ value: g, label: g })),
+                          ...groupOptions.map((g) => ({
+                            value: g,
+                            label: getDisplayGroupName(g),
+                          })),
                         ]}
                         onValueChange={(v) =>
                           field.onChange(v === '__none__' ? '' : v)

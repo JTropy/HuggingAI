@@ -21,6 +21,7 @@ import { X, User, Wallet, LogOut } from 'lucide-react'
 import { AnimatePresence, motion, type Variants } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import type { AuthUser } from '@/stores/auth-store'
+import { getDisplayGroupName } from '@/lib/display-group'
 import useDialogState from '@/hooks/use-dialog'
 import { useUserDisplay } from '@/hooks/use-user-display'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -102,7 +103,7 @@ function MobileUserProfile({ user, onNavigate }: MobileUserProfileProps) {
                 <>
                   <span className='text-muted-foreground text-xs'>·</span>
                   <span className='text-muted-foreground text-xs'>
-                    {String(user.group)}
+                    {getDisplayGroupName(user.group)}
                   </span>
                 </>
               )}

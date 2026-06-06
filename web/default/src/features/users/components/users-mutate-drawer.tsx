@@ -24,6 +24,7 @@ import { Pencil } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { getCurrencyDisplay, getCurrencyLabel } from '@/lib/currency'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { formatQuota, parseQuotaFromDollars } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import {
@@ -330,7 +331,7 @@ export function UsersMutateDrawer({
                           items={[
                             ...groups.map((group) => ({
                               value: group,
-                              label: group,
+                              label: getDisplayGroupName(group),
                             })),
                           ]}
                           onValueChange={field.onChange}
@@ -345,7 +346,7 @@ export function UsersMutateDrawer({
                             <SelectGroup>
                               {groups.map((group) => (
                                 <SelectItem key={group} value={group}>
-                                  {group}
+                                  {getDisplayGroupName(group)}
                                 </SelectItem>
                               ))}
                             </SelectGroup>

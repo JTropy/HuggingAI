@@ -20,6 +20,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { formatQuota, formatCompactNumber } from '@/lib/format'
 import {
   Dialog,
@@ -135,7 +136,10 @@ export function UserInfoDialog({
                 value={formatCompactNumber(userInfo.request_count)}
               />
               {userInfo.group && (
-                <InfoItem label={t('User Group')} value={userInfo.group} />
+                <InfoItem
+                  label={t('User Group')}
+                  value={getDisplayGroupName(userInfo.group)}
+                />
               )}
             </div>
 

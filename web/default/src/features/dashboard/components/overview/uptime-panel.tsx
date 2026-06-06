@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { memo, useEffect, useState } from 'react'
 import { Activity, RotateCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -153,7 +154,7 @@ export function UptimePanel() {
                       <span className='truncate text-sm'>{monitor.name}</span>
                       {monitor.group && (
                         <span className='text-muted-foreground/40 shrink-0 text-xs'>
-                          ({monitor.group})
+                          ({getDisplayGroupName(monitor.group)})
                         </span>
                       )}
                     </div>

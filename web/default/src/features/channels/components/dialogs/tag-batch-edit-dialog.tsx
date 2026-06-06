@@ -21,6 +21,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -80,7 +81,7 @@ export function TagBatchEditDialog({
     const allGroups = new Set([...groupsData.data, ...groups])
     return Array.from(allGroups).map((group) => ({
       value: group,
-      label: group,
+      label: getDisplayGroupName(group),
     }))
   }, [groupsData, groups])
 

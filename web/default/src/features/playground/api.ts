@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { api } from '@/lib/api'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { API_ENDPOINTS } from './constants'
 import type {
   ChatCompletionRequest,
@@ -69,7 +70,7 @@ export async function getUserGroups(): Promise<GroupOption[]> {
 
   // label is for button display (name only); desc is for dropdown content
   return Object.entries(groupData).map(([group, info]) => ({
-    label: group,
+    label: getDisplayGroupName(group),
     value: group,
     ratio: info.ratio,
     desc: info.desc,

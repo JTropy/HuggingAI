@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useMemo, useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { normalizeGroupRatio } from '@/lib/group-ratio'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -131,6 +132,7 @@ export function ApiKeyGroupCombobox({
       return (
         option.value.toLowerCase().includes(search) ||
         option.label.toLowerCase().includes(search) ||
+        getDisplayGroupName(option.value).toLowerCase().includes(search) ||
         option.desc?.toLowerCase().includes(search) ||
         ratioText.includes(search)
       )

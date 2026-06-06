@@ -22,6 +22,7 @@ import { CircleAlert, Sparkles, KeyRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { getUserAvatarFallback, getUserAvatarStyle } from '@/lib/avatar'
 import { formatBillingCurrencyFromUSD } from '@/lib/currency'
+import { getDisplayGroupName } from '@/lib/display-group'
 import {
   formatUseTime,
   formatLogQuota,
@@ -486,7 +487,7 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
       const metaParts: string[] = []
       const groupRatioText = getGroupRatioText(other)
       if (group) {
-        metaParts.push(sensitiveVisible ? group : '••••')
+        metaParts.push(sensitiveVisible ? getDisplayGroupName(group) : '••••')
       }
       if (groupRatioText) metaParts.push(groupRatioText)
 
@@ -752,7 +753,7 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
 
         return (
           <div className='flex flex-col gap-0.5'>
-            <span className='border-border/80 bg-muted/60 inline-flex h-6 w-fit items-center rounded-md border px-2 text-sm leading-none [font-family:var(--font-body)] font-semibold tabular-nums'>
+            <span className='border-border/80 bg-muted/60 inline-flex h-6 w-fit items-center rounded-md border px-2 [font-family:var(--font-body)] text-sm leading-none font-semibold tabular-nums'>
               {quotaDisplay.prefix && (
                 <span className='mr-1'>{quotaDisplay.prefix}</span>
               )}

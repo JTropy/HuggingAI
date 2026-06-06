@@ -22,6 +22,7 @@ import { User, Wallet, LogOut, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth-store'
 import { getUserAvatarFallback, getUserAvatarStyle } from '@/lib/avatar'
+import { getDisplayGroupName } from '@/lib/display-group'
 import { ROLE } from '@/lib/roles'
 import useDialogState from '@/hooks/use-dialog'
 import { useUserDisplay } from '@/hooks/use-user-display'
@@ -89,7 +90,7 @@ export function ProfileDropdown() {
                   <>
                     <span className='text-muted-foreground text-xs'>·</span>
                     <span className='text-muted-foreground truncate text-xs'>
-                      {String(user.group)}
+                      {getDisplayGroupName(user.group)}
                     </span>
                   </>
                 )}
